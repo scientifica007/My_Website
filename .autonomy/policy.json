@@ -15,12 +15,14 @@
     "scripts/autonomy/",
     "tests/autonomy/"
   ],
-  "historical_prefix": "cycles/",
-  "allow_current_cycle_artifacts_only": true,
+  "historical_prefixes": [
+    "cycles/",
+    "final-audits/"
+  ],
   "rollback_product_changes_on_verification_failure": true,
   "max_plan_revisions": 3,
   "max_ai_calls_per_cycle": 12,
-  "max_context_characters": 26000,
+  "max_context_characters": 16000,
   "max_executor_read_files": 12,
   "max_executor_operations": 30,
   "synthetic_data_only": true,
