@@ -32,6 +32,12 @@ def main() -> int:
         "max_completion_tokens": 80,
         "response_format": {"type": "json_object"},
     }
+    if "qwen/qwen3.6" in model:
+        payload["reasoning_format"] = "hidden"
+        payload["reasoning_effort"] = "none"
+    elif "gpt-oss" in model:
+        payload["reasoning_effort"] = "low"
+
     request = urllib.request.Request(
         f"{base}/chat/completions",
         data=json.dumps(payload).encode("utf-8"),
@@ -50,7 +56,14 @@ def main() -> int:
         if result.get("status") != "ok":
             print(f"AI provider probe: unexpected response {result!r}", file=sys.stderr)
             return 3
-    except (urllib.error.URLError, urllib.error.HTTPError, KeyError, json.JSONDecodeError) as exc:
+    except urllib.error.HTTPError as exc:
+        details = exc.read().decode("utf-8", errors="replace")
+        print(
+            f"AI provider probe failed: HTTP {exc.code}: {details[:1200]}",
+            file=sys.stderr,
+        )
+        return 4
+    except (urllib.error.URLError, KeyError, json.JSONDecodeError) as exc:
         print(f"AI provider probe failed: {exc}", file=sys.stderr)
         return 4
     print(f"AI provider probe: PASS ({model})")
