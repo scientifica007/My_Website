@@ -61,7 +61,10 @@
 - `.autonomy/provider.json`
 - `scripts/autonomy/`
 - `.github/workflows/autonomous-cycle.yml`
+- `.github/workflows/governance-validation.yml`
 - `tests/autonomy/`
+- تاريخ الدورات تحت `cycles/`
+- تاريخ التدقيقات النهائية تحت `final-audits/`
 
 تعديلات البنية التحتية البشرية المسموحة تسجل وفق `EXPERIMENT_PROTOCOL.md`.
 
@@ -81,7 +84,7 @@
 - تعديل قواعد التجربة.
 - قراءة أسرار أو طباعتها أو تضمينها في الناتج.
 - تعطيل اختبارات لكي يمر التحقق.
-- تعديل سجل دورة مغلقة.
+- تعديل سجل دورة مغلقة أو سجل تدقيق نهائي.
 - إعلان نتيجة نهائية دون Final Audit.
 
 ## 6. فشل البنية التحتية
