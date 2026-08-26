@@ -73,15 +73,14 @@ def main() -> int:
     models = cfg["models"]
     started = utc_now()
     try:
-        collector = call_json(
-            models["collector"],
-            """Technical dry run only; do not design the real product.\n"
+        collector_prompt = (
+            "Technical dry run only; do not design the real product. "
             "Given a synthetic empty demo repository whose goal is to create one Arabic RTL hello page, "
             "return concise JSON with keys summary, classifications, evidence, smart_objective, "
             "acceptance_criteria, rationale, remaining_goal_gaps. Use at most 3 items per array and "
-            "keep each string under 30 words.""",
-            900,
+            "keep each string under 30 words."
         )
+        collector = call_json(models["collector"], collector_prompt, 900)
         require_keys(
             "collector",
             collector,
@@ -96,15 +95,14 @@ def main() -> int:
             },
         )
 
-        planner = call_json(
-            models["planner"],
-            """Technical dry run only; do not affect the real repository.\n"
+        planner_prompt = (
+            "Technical dry run only; do not affect the real repository. "
             "Create a tiny plan for this synthetic objective and return concise JSON with keys "
             "objective_alignment, steps, intended_files, verification, risks, allowed_fallbacks, "
-            "expected_evidence. Maximum 4 steps. Objective: """
-            + str(collector.get("smart_objective", "create an Arabic RTL hello page")),
-            1100,
+            "expected_evidence. Maximum 4 steps. Objective: "
+            + str(collector.get("smart_objective", "create an Arabic RTL hello page"))
         )
+        planner = call_json(models["planner"], planner_prompt, 1100)
         require_keys(
             "planner",
             planner,
@@ -119,14 +117,12 @@ def main() -> int:
             },
         )
 
-        reviewer = call_json(
-            models["reviewer"],
-            """Technical dry run only. Review this synthetic plan. Return concise JSON with keys "
+        reviewer_prompt = (
+            "Technical dry run only. Review this synthetic plan. Return concise JSON with keys "
             "decision, critical_issues, verification_gaps, risks, comments. decision must be "
-            "APPROVE or REVISE. PLAN: """
-            + json.dumps(planner, ensure_ascii=False),
-            700,
+            "APPROVE or REVISE. PLAN: " + json.dumps(planner, ensure_ascii=False)
         )
+        reviewer = call_json(models["reviewer"], reviewer_prompt, 700)
         require_keys(
             "reviewer",
             reviewer,
