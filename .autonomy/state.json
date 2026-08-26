@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "experiment_state": "BOOTSTRAP",
+  "armed": false,
+  "started_at": null,
+  "finished_at": null,
+  "current_cycle": 0,
+  "current_stage": "BOOTSTRAP_VALIDATION",
+  "last_completed_cycle": 0,
+  "final_audit_status": "NOT_REQUESTED",
+  "infrastructure_status": "UNKNOWN",
+  "last_run_at": null,
+  "last_run_result": null,
+  "human_development_interventions": 0,
+  "human_infrastructure_interventions": 0,
+  "notes": [
+    "Bootstrap changes are outside the autonomous-development measurement window.",
+    "Do not set armed=true until bootstrap validation and provider configuration succeed."
+  ]
+}
