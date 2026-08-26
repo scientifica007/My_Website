@@ -1,0 +1,91 @@
+name: Autonomous PDSA
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "validate, start, or run"
+        required: true
+        default: "validate"
+        type: choice
+        options:
+          - validate
+          - start
+          - run
+
+permissions:
+  contents: write
+
+concurrency:
+  group: my-website-autonomy
+  cancel-in-progress: false
+
+jobs:
+  autonomy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate experiment infrastructure
+        run: |
+          python scripts/autonomy/validate.py
+          python -m unittest discover -s tests/autonomy -v
+
+      - name: Preflight free AI provider before START
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'start'
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL }}
+        run: python scripts/autonomy/probe.py
+
+      - name: Perform one-time START transition
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'start'
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          CONFIRM_EXPERIMENT_START: "YES"
+        run: python scripts/autonomy/start.py
+
+      - name: Run one autonomous PDSA cycle
+        if: >-
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && (inputs.mode == 'start' || inputs.mode == 'run'))
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL }}
+          PYTHONUNBUFFERED: "1"
+        run: python scripts/autonomy/controller.py
+
+      - name: Re-validate machine governance
+        if: always()
+        run: |
+          python scripts/autonomy/validate.py
+          python -m unittest discover -s tests/autonomy -v
+
+      - name: Commit autonomous state, evidence, and accepted product changes
+        if: >-
+          always() &&
+          (github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && (inputs.mode == 'start' || inputs.mode == 'run')))
+        run: |
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "No repository changes to commit."
+            exit 0
+          fi
+          git config user.name "My_Website Autonomous PDSA"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "autonomy: persist PDSA run state and evidence"
+          git push origin HEAD:main
