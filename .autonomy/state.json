@@ -1,6 +1,6 @@
 {
   "armed": true,
-  "current_cycle": 1,
+  "current_cycle": 2,
   "current_stage": "READY_FOR_NEXT_CYCLE",
   "experiment_state": "ACTIVE",
   "final_audit_status": "NOT_REQUESTED",
@@ -8,9 +8,9 @@
   "human_development_interventions": 0,
   "human_infrastructure_interventions": 0,
   "infrastructure_status": "AVAILABLE",
-  "last_completed_cycle": 1,
-  "last_run_at": "2026-08-26T16:17:22+00:00",
-  "last_run_result": "CYCLE_COMPLETED",
+  "last_completed_cycle": 2,
+  "last_run_at": "2026-08-26T20:03:20+00:00",
+  "last_run_result": "PLANNING_ABORT_RECORDED",
   "notes": [
     "Bootstrap changes are outside the autonomous-development measurement window.",
     "Do not set armed=true until bootstrap validation and provider configuration succeed."

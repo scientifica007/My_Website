@@ -1,0 +1,35 @@
+{
+  "acceptance_criteria": [
+    "A build/run script exists and executes successfully without critical errors.",
+    "The application serves a web page accessible via localhost.",
+    "The web page displays in Arabic with Right-to-Left (RTL) direction.",
+    "The web page lists the synthetic institutions from data/institutions.json.",
+    "No real personal data or secrets are committed.",
+    "Basic unit tests for the data loading logic pass."
+  ],
+  "classifications": [
+    "INFRASTRUCTURE_MISSING",
+    "CORE_FUNCTIONALITY_ABSENT",
+    "UI_LOCALIZATION_MISSING"
+  ],
+  "evidence": [
+    "README.md states 'BOOTSTRAP / NOT ARMED'.",
+    "No frontend files (HTML/CSS/JS/React/etc.) exist in the repository tree.",
+    "No backend server code exists in the repository tree.",
+    "data/institutions.json exists, providing synthetic data for the first functional requirement.",
+    "DEFINITION_OF_DONE.md requires a runnable web app with Arabic RTL interface and data persistence.",
+    "PRODUCT_GOAL.md requires management of institutions, visits, observations, recommendations, and legal texts."
+  ],
+  "rationale": "Before any inspection workflow (visits, recommendations, legal texts) can be implemented, the foundational application structure must exist. The current state has data but no application to consume it. Establishing the 'Hello World' equivalent for this domain (an Arabic RTL app displaying synthetic institutions) is the necessary first step to satisfy Definition of Done section A (Operability) and B (Language/UX), and enables subsequent cycles to add functional features.",
+  "remaining_goal_gaps": [
+    "Management of inspection visits and observations.",
+    "Creation and tracking of recommendations.",
+    "Legal/regulatory corpus management and search.",
+    "Report generation.",
+    "Data persistence beyond session (if not already handled by the chosen stack).",
+    "Comprehensive testing and documentation.",
+    "Deployment pipeline."
+  ],
+  "smart_objective": "Scaffold the minimal viable web application architecture with an Arabic RTL interface, a basic backend API to serve synthetic institution data, and a frontend view to list these institutions, ensuring the application can be built and run locally without errors.",
+  "summary": "The project is in BOOTSTRAP/NOT ARMED state. The repository contains governance scripts and synthetic data for institutions, but lacks the actual web application code (frontend/backend) required to meet the Product Goal. The most critical gap is the absence of a functional application skeleton that supports Arabic RTL and basic data persistence."
+}
