@@ -12,9 +12,9 @@ from core import METRICS, PROVIDER, GovernanceError, load_json, save_json
 
 
 class AIProvider:
-    def __init__(self) -> None:
+    def __init__(self, metrics: dict[str, Any]) -> None:
         self.config = load_json(PROVIDER)
-        self.metrics = load_json(METRICS)
+        self.metrics = metrics
         key_env = self.config.get("api_key_env", "AI_API_KEY")
         base_env = self.config.get("base_url_env", "AI_BASE_URL")
         self.api_key = os.environ.get(key_env)
