@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "cycles_started": 0,
+  "cycles_completed": 0,
+  "plans_rejected": 0,
+  "plan_revisions": 0,
+  "execution_failures": 0,
+  "verification_failures": 0,
+  "rollbacks": 0,
+  "repeated_errors": 0,
+  "autonomous_decision_blocks": 0,
+  "ai_calls": 0,
+  "ai_calls_by_role": {},
+  "models_used": {},
+  "reported_input_tokens": 0,
+  "reported_output_tokens": 0,
+  "human_development_interventions": 0,
+  "human_infrastructure_interventions": 0,
+  "final_audits": 0,
+  "final_audit_failures": 0,
+  "started_at": null,
+  "final_candidate_at": null
+}
