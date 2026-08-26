@@ -43,7 +43,13 @@ class AIProvider:
             "max_completion_tokens": max_tokens,
             "response_format": {"type": "json_object"},
         }
-        if "gpt-oss" in model:
+
+        # Groq reasoning models have model-specific parameters. Qwen 3.6
+        # requires parsed/hidden reasoning whenever JSON mode is enabled;
+        # raw reasoning with JSON mode is rejected with HTTP 400.
+        if "qwen/qwen3.6" in model:
+            payload["reasoning_format"] = "hidden"
+        elif "gpt-oss" in model:
             payload["reasoning_effort"] = request_config.get(
                 "reasoning_effort", "medium"
             )
