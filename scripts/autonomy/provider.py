@@ -44,32 +44,34 @@ class AIProvider:
             "response_format": {"type": "json_object"},
         }
 
-        # Groq reasoning models have model-specific parameters. Qwen 3.6
-        # requires parsed/hidden reasoning whenever JSON mode is enabled;
-        # raw reasoning with JSON mode is rejected with HTTP 400.
+        # Groq reasoning models have model-specific controls. For Qwen 3.6,
+        # reasoning tokens count against max_completion_tokens even when hidden.
+        # These repository-management roles need compact, valid JSON more than
+        # hidden chain-of-thought, so disable reasoning to protect the free-tier
+        # token budget and prevent JSON truncation. GPT-OSS keeps low reasoning.
         if "qwen/qwen3.6" in model:
             payload["reasoning_format"] = "hidden"
+            payload["reasoning_effort"] = "none"
         elif "gpt-oss" in model:
             payload["reasoning_effort"] = request_config.get(
-                "reasoning_effort", "medium"
+                "reasoning_effort", "low"
             )
-
-        request = urllib.request.Request(
-            f"{self.base_url}/chat/completions",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": "My_Website-Autonomy/1.0",
-            },
-            method="POST",
-        )
 
         retries = int(request_config.get("retry_429", 4))
         minimum_wait = int(request_config.get("minimum_retry_seconds", 10))
         timeout = int(request_config.get("timeout_seconds", 120))
 
         for attempt in range(retries + 1):
+            request = urllib.request.Request(
+                f"{self.base_url}/chat/completions",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "My_Website-Autonomy/1.0",
+                },
+                method="POST",
+            )
             try:
                 with urllib.request.urlopen(request, timeout=timeout) as response:
                     data = json.loads(response.read().decode("utf-8"))
@@ -80,11 +82,18 @@ class AIProvider:
                 self._record(role, model, data.get("usage", {}))
                 return result
             except urllib.error.HTTPError as exc:
-                if exc.code != 429 or attempt >= retries:
-                    details = exc.read().decode("utf-8", errors="replace")
+                details = exc.read().decode("utf-8", errors="replace")
+                retryable_json = exc.code == 400 and "json_validate_failed" in details
+                retryable_rate = exc.code == 429
+                if not (retryable_json or retryable_rate) or attempt >= retries:
                     raise GovernanceError(
                         f"AI provider HTTP {exc.code}: {details[:1200]}"
                     ) from exc
+                if retryable_json:
+                    # A second sample can recover from occasional JSON-mode
+                    # generation failures. Keep the same governance prompt.
+                    time.sleep(minimum_wait)
+                    continue
                 raw_retry = exc.headers.get("retry-after")
                 wait = (
                     max(minimum_wait, int(float(raw_retry)))

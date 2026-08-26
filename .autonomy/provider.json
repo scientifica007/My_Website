@@ -15,7 +15,7 @@
   },
   "request": {
     "temperature": 0.2,
-    "reasoning_effort": "medium",
+    "reasoning_effort": "low",
     "timeout_seconds": 120,
     "retry_429": 4,
     "minimum_retry_seconds": 10
@@ -23,6 +23,8 @@
   "notes": [
     "The autonomy engine depends on an API interface, not on a specific vendor.",
     "The defaults target Groq's OpenAI-compatible endpoint but may be replaced without changing PDSA governance.",
+    "Qwen JSON roles run with reasoning disabled in the provider to avoid consuming the free-tier output budget before a valid JSON document is completed.",
+    "GPT-OSS roles use low reasoning by default to preserve enough completion budget for structured output.",
     "The API key must exist only as a GitHub Actions secret named AI_API_KEY."
   ]
 }

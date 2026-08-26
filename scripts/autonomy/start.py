@@ -6,7 +6,9 @@ import datetime as dt
 import os
 import sys
 
-from core import METRICS, STATE, bootstrap_errors, load_json, save_json
+from core import AUTONOMY, METRICS, STATE, bootstrap_errors, load_json, save_json
+
+DRY_RUN = AUTONOMY / "prestart-dryrun.json"
 
 
 def utc_now() -> str:
@@ -26,6 +28,13 @@ def main() -> int:
     if not os.environ.get("AI_API_KEY"):
         print("Refusing START: AI_API_KEY is unavailable", file=sys.stderr)
         return 4
+    if not DRY_RUN.is_file():
+        print("Refusing START: required technical dry run has not been recorded", file=sys.stderr)
+        return 7
+    dry_run = load_json(DRY_RUN)
+    if dry_run.get("passed") is not True:
+        print("Refusing START: technical dry run did not pass", file=sys.stderr)
+        return 8
 
     state = load_json(STATE)
     metrics = load_json(METRICS)
