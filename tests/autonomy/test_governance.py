@@ -33,9 +33,17 @@ class GovernanceTests(unittest.TestCase):
         with self.assertRaises(GovernanceError):
             assert_executor_path_allowed("scripts/autonomy/core.py")
 
+    def test_autonomy_workflow_is_protected(self) -> None:
+        with self.assertRaises(GovernanceError):
+            assert_executor_path_allowed(".github/workflows/autonomous-cycle.yml")
+
     def test_cycle_history_is_protected(self) -> None:
         with self.assertRaises(GovernanceError):
             assert_executor_path_allowed("cycles/PDSA-0001/study.json")
+
+    def test_final_audit_history_is_protected(self) -> None:
+        with self.assertRaises(GovernanceError):
+            assert_executor_path_allowed("final-audits/audit-0001.json")
 
     def test_path_escape_is_rejected(self) -> None:
         with self.assertRaises(GovernanceError):
