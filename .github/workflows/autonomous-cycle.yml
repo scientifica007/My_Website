@@ -45,6 +45,17 @@ jobs:
           python scripts/autonomy/validate.py
           python -m unittest discover -s tests/autonomy -v
 
+      - name: Read autonomous state
+        id: autonomous_state
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          state = json.load(open('.autonomy/state.json', encoding='utf-8'))
+          print('armed=' + ('true' if state.get('armed') else 'false'))
+          print('final=' + ('true' if state.get('experiment_state') == 'FINAL_CANDIDATE' else 'false'))
+          PY
+
       - name: Preflight free AI provider before START
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'start'
         env:
@@ -60,8 +71,11 @@ jobs:
         run: python scripts/autonomy/start.py
 
       - name: Run one autonomous PDSA cycle
+        id: autonomy_run
         if: >-
-          github.event_name == 'schedule' ||
+          (github.event_name == 'schedule' &&
+           steps.autonomous_state.outputs.armed == 'true' &&
+           steps.autonomous_state.outputs.final != 'true') ||
           (github.event_name == 'workflow_dispatch' && (inputs.mode == 'start' || inputs.mode == 'run'))
         env:
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
@@ -82,13 +96,22 @@ jobs:
           (github.event_name == 'workflow_dispatch' && (inputs.mode == 'start' || inputs.mode == 'run')))
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          AUTONOMY_OUTCOME: ${{ steps.autonomy_run.outcome }}
         run: |
-          if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+          git config user.name "My_Website Autonomous PDSA"
+          git config user.email "actions@users.noreply.github.com"
+
+          if [ "$AUTONOMY_OUTCOME" = "failure" ]; then
+            echo "Controller failed: committing evidence/state only; product changes remain unstaged."
+            git add -A .autonomy cycles final-audits 2>/dev/null || true
+          else
+            git add -A
+          fi
+
+          if git diff --cached --quiet; then
             echo "No repository changes to commit."
             exit 0
           fi
-          git config user.name "My_Website Autonomous PDSA"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
+
           git commit -m "autonomy: persist PDSA run state and evidence"
           git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
