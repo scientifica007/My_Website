@@ -28,11 +28,12 @@ jobs:
     timeout-minutes: 120
 
     steps:
-      - name: Checkout main
+      - name: Checkout main without persistent credentials
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -79,6 +80,8 @@ jobs:
           always() &&
           (github.event_name == 'schedule' ||
           (github.event_name == 'workflow_dispatch' && (inputs.mode == 'start' || inputs.mode == 'run')))
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
             echo "No repository changes to commit."
@@ -88,4 +91,4 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add -A
           git commit -m "autonomy: persist PDSA run state and evidence"
-          git push origin HEAD:main
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
