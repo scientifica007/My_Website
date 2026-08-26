@@ -9,7 +9,8 @@
     "AGENTS.md",
     ".autonomy/policy.json",
     ".autonomy/provider.json",
-    ".github/workflows/autonomous-cycle.yml"
+    ".github/workflows/autonomous-cycle.yml",
+    ".github/workflows/governance-validation.yml"
   ],
   "protected_prefixes": [
     "scripts/autonomy/",
