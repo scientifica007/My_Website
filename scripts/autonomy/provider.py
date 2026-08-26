@@ -20,9 +20,8 @@ class AIProvider:
         self.api_key = os.environ.get(key_env)
         if not self.api_key:
             raise GovernanceError(f"missing AI API key: {key_env}")
-        self.base_url = os.environ.get(
-            base_env, self.config["default_base_url"]
-        ).rstrip("/")
+        base_override = os.environ.get(base_env)
+        self.base_url = (base_override or self.config["default_base_url"]).rstrip("/")
 
     def ask_json(
         self,
