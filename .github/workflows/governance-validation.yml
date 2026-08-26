@@ -1,0 +1,29 @@
+name: Governance Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate immutable experiment infrastructure
+        run: |
+          python scripts/autonomy/validate.py
+          python -m unittest discover -s tests/autonomy -v
+          python -m py_compile scripts/autonomy/core.py scripts/autonomy/provider.py scripts/autonomy/probe.py scripts/autonomy/start.py scripts/autonomy/controller.py

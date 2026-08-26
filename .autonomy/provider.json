@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "protocol": "openai-compatible-chat-completions",
+  "base_url_env": "AI_BASE_URL",
+  "api_key_env": "AI_API_KEY",
+  "default_base_url": "https://api.groq.com/openai/v1",
+  "models": {
+    "collector": "qwen/qwen3.6-27b",
+    "planner": "openai/gpt-oss-120b",
+    "reviewer": "qwen/qwen3.6-27b",
+    "executor": "openai/gpt-oss-120b",
+    "study_analyst": "qwen/qwen3.6-27b",
+    "act_analyst": "qwen/qwen3.6-27b",
+    "final_auditor": "openai/gpt-oss-120b"
+  },
+  "request": {
+    "temperature": 0.2,
+    "reasoning_effort": "medium",
+    "timeout_seconds": 120,
+    "retry_429": 4,
+    "minimum_retry_seconds": 10
+  },
+  "notes": [
+    "The autonomy engine depends on an API interface, not on a specific vendor.",
+    "The defaults target Groq's OpenAI-compatible endpoint but may be replaced without changing PDSA governance.",
+    "The API key must exist only as a GitHub Actions secret named AI_API_KEY."
+  ]
+}
