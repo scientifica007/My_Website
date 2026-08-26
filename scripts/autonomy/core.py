@@ -84,15 +84,16 @@ def is_protected(rel_path: str, policy: dict[str, Any] | None = None) -> bool:
 
 
 def assert_executor_path_allowed(rel_path: str) -> pathlib.Path:
+    policy = load_json(POLICY)
     rel = pathlib.PurePosixPath(rel_path)
     if rel.is_absolute() or ".." in rel.parts:
         raise GovernanceError(f"unsafe path: {rel_path}")
     normalized = rel.as_posix()
     if normalized.startswith(".git/"):
         raise GovernanceError("executor cannot modify .git")
-    if normalized.startswith("cycles/"):
-        raise GovernanceError("executor cannot modify cycle history")
-    if is_protected(normalized):
+    if any(normalized.startswith(prefix) for prefix in policy.get("historical_prefixes", [])):
+        raise GovernanceError(f"executor cannot modify historical evidence: {normalized}")
+    if is_protected(normalized, policy):
         raise GovernanceError(f"protected path: {normalized}")
     target = (ROOT / normalized).resolve()
     if target != ROOT.resolve() and ROOT.resolve() not in target.parents:
@@ -164,6 +165,7 @@ def bootstrap_errors() -> list[str]:
         ".autonomy/policy.json",
         ".autonomy/provider.json",
         ".github/workflows/autonomous-cycle.yml",
+        ".github/workflows/governance-validation.yml",
     }
     missing = must_protect - set(policy.get("protected_exact_paths", []))
     if missing:
@@ -173,6 +175,10 @@ def bootstrap_errors() -> list[str]:
         errors.append("scripts/autonomy/ must be protected")
     if "tests/autonomy/" not in policy.get("protected_prefixes", []):
         errors.append("tests/autonomy/ must be protected")
+
+    historical = set(policy.get("historical_prefixes", []))
+    if not {"cycles/", "final-audits/"}.issubset(historical):
+        errors.append("cycle and final-audit histories must be protected")
 
     if not policy.get("rollback_product_changes_on_verification_failure"):
         errors.append("rollback on failed verification must remain enabled")
