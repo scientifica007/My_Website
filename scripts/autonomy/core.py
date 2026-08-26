@@ -164,17 +164,26 @@ def bootstrap_errors() -> list[str]:
     must_protect = set(REQUIRED_DOCS) | {
         ".autonomy/policy.json",
         ".autonomy/provider.json",
+        ".autonomy/state.json",
+        ".autonomy/metrics.json",
         ".github/workflows/autonomous-cycle.yml",
         ".github/workflows/governance-validation.yml",
     }
-    missing = must_protect - set(policy.get("protected_exact_paths", []))
+    missing = sorted(path for path in must_protect if not is_protected(path, policy))
     if missing:
-        errors.append(f"policy fails to protect: {sorted(missing)}")
+        errors.append(f"policy fails to protect: {missing}")
 
-    if "scripts/autonomy/" not in policy.get("protected_prefixes", []):
-        errors.append("scripts/autonomy/ must be protected")
-    if "tests/autonomy/" not in policy.get("protected_prefixes", []):
-        errors.append("tests/autonomy/ must be protected")
+    required_prefixes = {
+        ".autonomy/",
+        ".github/workflows/",
+        "scripts/autonomy/",
+        "tests/autonomy/",
+    }
+    configured_prefixes = set(policy.get("protected_prefixes", []))
+    if not required_prefixes.issubset(configured_prefixes):
+        errors.append(
+            f"policy missing protected prefixes: {sorted(required_prefixes - configured_prefixes)}"
+        )
 
     historical = set(policy.get("historical_prefixes", []))
     if not {"cycles/", "final-audits/"}.issubset(historical):
