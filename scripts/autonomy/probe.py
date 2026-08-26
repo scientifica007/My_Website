@@ -17,9 +17,8 @@ def main() -> int:
     if not key:
         print("AI provider probe: missing API key", file=sys.stderr)
         return 2
-    base = os.environ.get(
-        cfg.get("base_url_env", "AI_BASE_URL"), cfg["default_base_url"]
-    ).rstrip("/")
+    base_env = cfg.get("base_url_env", "AI_BASE_URL")
+    base = (os.environ.get(base_env) or cfg["default_base_url"]).rstrip("/")
     model = cfg["models"]["collector"]
     payload = {
         "model": model,
