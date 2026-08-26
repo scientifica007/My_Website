@@ -1,0 +1,40 @@
+{
+  "acceptance_criteria": [
+    "A build/run command exists and executes without errors.",
+    "The application serves a web page in Arabic with RTL direction.",
+    "The application includes a basic data model for 'Institutions' (as per Product Goal 1) and persists synthetic data across page reloads (e.g., using local storage or a simple file-based DB).",
+    "Automated tests verify the build process and the presence of RTL/Arabic attributes.",
+    "No secrets or real data are committed."
+  ],
+  "classifications": [
+    "INFRASTRUCTURE_MISSING",
+    "NO_PRODUCT_CODE",
+    "NO_UI",
+    "NO_DATA_PERSISTENCE"
+  ],
+  "evidence": [
+    "README.md states: 'BOOTSTRAP / NOT ARMED'",
+    "Repository tree contains only scripts/autonomy and tests/autonomy (governance tests).",
+    "No frontend or backend application files exist.",
+    "No package.json, requirements.txt, or similar dependency files for the product.",
+    "No HTML/CSS/JS or framework-specific files found.",
+    "DoD-A requires a documented path to run the app and persistent data.",
+    "DoD-B requires Arabic RTL interface."
+  ],
+  "rationale": "Before implementing specific inspection workflows (visits, recommendations, legal corpus), the project must have a functional application shell. The current state is purely governance infrastructure. The smallest viable step to move from 'Bootstrap' to 'Product Development' is to create a runnable app that respects the core constraints (Arabic, RTL, Persistence). This reduces the largest gap: the absence of any product artifact.",
+  "remaining_goal_gaps": [
+    "Management of vocational training institutions (beyond basic model).",
+    "Recording visits, inspections, and evidence.",
+    "Organizing observations into trackable recommendations.",
+    "Tracking recommendation implementation.",
+    "Generating professional inspection reports.",
+    "Managing and searching legal/regulatory corpus.",
+    "Legal interpretation with provenance.",
+    "Analytical capabilities for decision support.",
+    "Comprehensive audit trails.",
+    "Full accessibility and error handling states.",
+    "Deployment pipeline for the application artifact."
+  ],
+  "smart_objective": "Establish a minimal runnable Arabic RTL web application skeleton with synthetic data persistence to satisfy DoD-A (Operability) and DoD-B (Language/UX) baseline requirements.",
+  "summary": "The repository is in a BOOTSTRAP state with only governance and automation infrastructure present. There is no application code, no UI, no data models, and no tests related to the product goal. The most critical gap is the absence of a runnable application skeleton that satisfies the basic 'Operability' (DoD-A) and 'Language/UX' (DoD-B) requirements."
+}

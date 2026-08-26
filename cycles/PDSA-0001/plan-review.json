@@ -1,0 +1,257 @@
+{
+  "approved": true,
+  "history": [
+    {
+      "plan": {
+        "allowed_fallbacks": [
+          "If Node.js cannot be executed, switch to a Python Flask app with equivalent endpoints and HTML page.",
+          "If file‑based persistence fails, fall back to in‑memory storage with a note that persistence is not demonstrated; record this deviation for the Study phase.",
+          "If CI cannot run Jest, use plain Node assert scripts executed via npm test."
+        ],
+        "expected_evidence": [
+          "SHA‑256 hash of the frozen plan recorded in .autonomy/state.json.",
+          "Build log showing `npm install` and `npm run dev` completing without errors.",
+          "Screenshot or HTML dump confirming `<html lang=\"ar\" dir=\"rtl\">` in the served page.",
+          "Test report JSON from CI indicating all assertions passed.",
+          "Data file `data/institutions.json` containing at least one synthetic institution after a POST request.",
+          "README excerpt with exact commands and description of persistence mechanism."
+        ],
+        "intended_files": [
+          "package.json",
+          "server.js",
+          "public/index.html",
+          "public/app.js",
+          "data/institutions.json",
+          "tests/app.test.js",
+          "README.md (updated with run instructions)"
+        ],
+        "objective_alignment": "Create a minimal runnable Arabic RTL web application skeleton with synthetic data persistence, directly satisfying DoD-A (Operability) and DoD-B (Language/UX) as required by the SMART objective and the product goal.",
+        "risks": [
+          "Node.js runtime not available in the execution environment – mitigated by allowed fallback to Python/Flask.",
+          "File system write permissions may be restricted – mitigated by using a subdirectory `data/` that is created at startup.",
+          "Tests may falsely pass if they only check HTTP status; ensure they also validate Arabic/RTL attributes.",
+          "Synthetic data file could be accidentally committed with real data – guard by .gitignore and synthetic data generation script."
+        ],
+        "steps": [
+          "1. Choose a lightweight web stack (Node.js with Express + plain HTML/CSS/JS) that requires no external secrets.",
+          "2. Add a package.json with start script `npm run dev` that launches the server.",
+          "3. Implement server (server.js) that serves a single HTML page and provides a JSON endpoint for synthetic 'Institutions' data persisted in a local file (data/institutions.json).",
+          "4. Create `public/index.html` containing Arabic UI text, `dir=\"rtl\"`, and minimal styling to demonstrate RTL layout.",
+          "5. Add a client‑side script (`public/app.js`) that fetches the institutions list from `/api/institutions` and displays it; also allows adding a new synthetic institution which is POSTed to the server and saved to the JSON file.",
+          "6. Write a README section documenting the exact build/run command (`npm install && npm run dev`) and how persistence works.",
+          "7. Add automated tests (using Jest or Mocha) that:",
+          "   - Verify the build script exits with code 0.",
+          "   - Start the server, request `/` and assert the response contains `lang=\"ar\"` and `dir=\"rtl\"`.",
+          "   - POST a new institution and then GET it to confirm persistence across requests.",
+          "8. Update .gitignore to exclude only node_modules; ensure no secrets are committed.",
+          "9. Add CI workflow step (already present) that runs the new tests on each push.",
+          "10. Document any fallback options (e.g., switch to Python/Flask if Node environment unavailable)."
+        ],
+        "verification": [
+          "Running `npm run dev` starts the server without errors.",
+          "Visiting http://localhost:3000 displays an Arabic page with RTL direction.",
+          "POST /api/institutions adds a record; subsequent GET returns the added record, proving file‑based persistence.",
+          "CI pipeline reports all tests passing.",
+          "README contains a reproducible run path that a fresh clone can follow."
+        ]
+      },
+      "review": {
+        "comments": "The plan is fundamentally sound in its goal to establish a runnable skeleton, but the implementation details for persistence and testing are insufficiently robust for an autonomous environment. Specifically, file-based persistence is fragile in automated tests. I recommend revising the plan to use in-memory storage for the application logic during tests, with a clear separation between the 'development' mode (file-based) and 'test' mode (in-memory). Additionally, ensure the test suite includes setup/teardown hooks to manage the state of the data store. The verification steps must be fully automated and deterministic.",
+        "critical_issues": [
+          "The plan proposes file-based persistence (`data/institutions.json`) which introduces race conditions and file-locking issues in concurrent test environments or CI pipelines, violating the 'Safe' and 'Verifiable' criteria for automated testing.",
+          "The plan lacks a specific strategy for handling the initial state of `data/institutions.json`. If the file is missing, the server must initialize it with synthetic data; if it exists, it must be read. The plan does not explicitly define this initialization logic, risking startup failures.",
+          "The verification step 'Visiting http://localhost:3000' is manual and non-deterministic for an autonomous agent. The plan must rely entirely on programmatic assertions (e.g., HTTP response body checks) rather than manual inspection or screenshots."
+        ],
+        "decision": "REVISE",
+        "risks": [
+          "File-based persistence may fail in read-only file systems (common in some CI environments), causing the entire plan to fail without a graceful fallback to in-memory storage during testing.",
+          "Using `npm run dev` for testing is risky if the script does not exit cleanly after tests, potentially leaving zombie processes that interfere with subsequent test runs.",
+          "The fallback to Python/Flask is a significant architectural change that should be a last resort, not a primary risk mitigation strategy, as it complicates the codebase and testing infrastructure."
+        ],
+        "verification_gaps": [
+          "The plan does not specify how the automated tests will handle the cleanup of the `data/institutions.json` file between test runs to ensure isolation and repeatability.",
+          "There is no explicit check in the test plan to verify that the `package.json` dependencies are correctly installed and that the `npm run dev` command does not hang or require user interaction.",
+          "The plan does not define a specific synthetic data schema for the 'Institutions' model, making it difficult to verify that the data structure aligns with future product requirements."
+        ]
+      },
+      "revision": 0
+    },
+    {
+      "plan": {
+        "allowed_fallbacks": [
+          "If Node.js cannot be executed, switch to a Python Flask implementation (app.py) with identical API and HTML, activated via USE_PYTHON env flag.",
+          "If file‑based persistence fails in development mode, the server logs a warning and falls back to in‑memory storage, persisting only for the current process.",
+          "If the test runner cannot execute Jest, the custom Node assert script (`npm test`) is used as the primary test harness."
+        ],
+        "expected_evidence": [
+          "SHA‑256 hash of the frozen plan recorded in .autonomy/state.json.",
+          "CI build log showing `npm ci` and `npm test` completing without errors.",
+          "JSON test report (e.g., test-report.json) indicating all assertions passed.",
+          "Programmatic evidence of RTL: the response body from GET / contains `<html lang=\"ar\" dir=\"rtl\">`.",
+          "Evidence of persistence: test logs showing POSTed institution ID appears in subsequent GET response.",
+          "README excerpt with exact commands and description of development vs test persistence modes."
+        ],
+        "intended_files": [
+          "package.json",
+          "server.js",
+          "schema/institution.schema.json",
+          "public/index.html",
+          "public/app.js",
+          "tests/app.test.js",
+          "README.md",
+          ".gitignore",
+          "data/institutions.json (created at runtime in development mode)"
+        ],
+        "objective_alignment": "Create a minimal runnable Arabic RTL web application skeleton with synthetic data persistence, directly satisfying DoD-A (Operability) and DoD-B (Language/UX) as required by the SMART objective and the product goal.",
+        "risks": [
+          "Node runtime unavailable – mitigated by a clearly defined Python Flask fallback triggered only by explicit env flag.",
+          "File‑system write permission issues in CI – mitigated by using in‑memory storage for test mode and only writing to data/ in development mode.",
+          "Potential zombie server processes – mitigated by explicit teardown hooks that kill the child process after each test suite.",
+          "Schema mismatch – mitigated by validating incoming POST bodies against the JSON schema before acceptance."
+        ],
+        "steps": [
+          "1. Choose a lightweight web stack (Node.js with Express + plain HTML/CSS/JS) that requires no external secrets.",
+          "2. Add a package.json with scripts: \"dev\":\"node server.js\", \"test\":\"node test/runTests.js\" and a start script that launches the server in development mode.",
+          "3. Implement server.js that:",
+          "   - Serves static files from /public.",
+          "   - Provides a JSON API at /api/institutions.",
+          "   - Detects NODE_ENV:",
+          "       * In \"development\" mode uses a file‑based store at data/institutions.json (initializes the file with a predefined synthetic array if missing).",
+          "       * In \"test\" mode uses an in‑memory array that is reset for each test run.",
+          "   - Exposes GET /api/institutions and POST /api/institutions (validation against a strict schema).",
+          "4. Define the synthetic Institution schema (JSON Schema) with required fields: id (uuid string), name (Arabic string), address (Arabic string), type (enum[\"public\",\"private\"]). Store schema in schema/institution.schema.json.",
+          "5. Create public/index.html containing <html lang=\"ar\" dir=\"rtl\"> with minimal Arabic UI text and a placeholder div for the institution list.",
+          "6. Add public/app.js that fetches the institution list, renders it, and allows adding a new institution via a simple form; it uses fetch to POST to the API.",
+          "7. Write README.md section documenting:",
+          "   - Prerequisites (Node >=14).",
+          "   - Exact build/run command: `npm ci && npm run dev`.",
+          "   - How persistence works in each mode.",
+          "   - How to run the automated test suite: `npm test`.",
+          "8. Implement automated tests in tests/app.test.js using a lightweight test runner (node's assert + supertest):",
+          "   - Verify that `npm ci` completes without error (spawn a child process and check exit code 0).",
+          "   - Start the server in test mode, request GET / and assert response body contains `<html` with `lang=\"ar\"` and `dir=\"rtl\"`.",
+          "   - POST a valid institution object, then GET /api/institutions and assert the new record appears, confirming in‑memory persistence.",
+          "   - Ensure each test runs with a fresh in‑memory store by spawning the server with NODE_ENV=\"test\" for every test suite.",
+          "   - Include setup/teardown hooks that kill the server process after tests to avoid zombie processes.",
+          "9. Add .gitignore entries for node_modules, data/, and any temporary test artifacts.",
+          "10. Update CI workflow (already present) to run `npm ci && npm test` on each push.",
+          "11. Document allowed fallback: if the CI environment lacks Node, a minimal Python Flask alternative (app.py) with identical endpoints and HTML can be used, but this fallback is only activated when a `USE_PYTHON` env flag is set."
+        ],
+        "verification": [
+          "Running `npm ci && npm run dev` starts the server and exits with code 0.",
+          "Automated test suite (`npm test`) completes with exit code 0 and all assertions pass.",
+          "Test 1 asserts the HTTP GET / response contains `<html lang=\"ar\" dir=\"rtl\">`.",
+          "Test 2 posts a synthetic institution (conforming to the JSON schema) and then GETs the list to verify the record is present, proving in‑memory persistence.",
+          "CI logs show successful npm install, server start in test mode, and all test assertions passed.",
+          "README contains reproducible commands that a fresh clone can execute without manual steps."
+        ]
+      },
+      "review": {
+        "comments": "The plan is fundamentally sound in its goal to establish a runnable skeleton. However, the inclusion of a Python fallback is a significant scope creep that threatens the cycle's success. Remove the Python fallback entirely. Focus on a robust Node.js implementation. Ensure the test suite covers both positive and negative validation cases for the API. Explicitly define the seed data to ensure Arabic content is present for RTL verification. Simplify the verification steps to rely on standard CI practices rather than spawning install processes within tests.",
+        "critical_issues": [
+          "The plan introduces a conditional fallback to Python Flask (Step 11, Allowed Fallbacks) which violates the 'cycle-sized' and 'safe' criteria. Maintaining two codebases (Node and Python) in a single bootstrap cycle doubles the complexity, increases the risk of divergence, and complicates the CI pipeline. The plan must commit to a single stack (Node.js is standard and sufficient) and remove the Python fallback entirely.",
+          "The verification step 'Verify that npm ci completes without error (spawn a child process...)' is fragile and non-standard. Standard CI pipelines handle dependency installation separately from test execution. The plan should rely on the CI environment to run `npm ci` and then execute `npm test`, rather than having the test suite spawn its own install process.",
+          "The plan does not explicitly define the 'synthetic data' content for the initial `data/institutions.json` seed. While it mentions a 'predefined synthetic array', the specific fields and values must be defined to ensure the 'Arabic RTL' requirement is verifiable from the start (e.g., ensuring the seed data contains Arabic text to test rendering)."
+        ],
+        "decision": "REVISE",
+        "risks": [
+          "Using `node's assert` with `supertest` requires careful handling of async/await or callbacks. If not implemented correctly, tests may hang or fail silently. The plan should specify using a modern async test structure.",
+          "The 'file-based store' in development mode introduces I/O latency and potential file-locking issues if the server is restarted abruptly. While acceptable for a bootstrap, it should be documented as a limitation."
+        ],
+        "verification_gaps": [
+          "The plan lacks a specific test for the 'POST /api/institutions' validation failure case. To satisfy the 'strict schema' requirement, there must be a test that sends invalid data (e.g., missing 'name' or wrong 'type') and asserts a 400/422 error response.",
+          "The plan does not specify how the 'Arabic RTL' requirement is verified beyond the HTML attributes. A test should verify that the API response for an institution includes Arabic text, ensuring the data layer supports the UX requirement.",
+          "The plan mentions 'No secrets or real data are committed' but does not explicitly state that the `data/institutions.json` file (if created during dev) is in `.gitignore`. While Step 9 mentions `.gitignore`, it should explicitly list `data/` to prevent accidental commits of local state."
+        ]
+      },
+      "revision": 1
+    },
+    {
+      "plan": {
+        "allowed_fallbacks": [
+          "If file‑based persistence fails in development mode, the server logs a warning and falls back to in‑memory storage for the current process."
+        ],
+        "expected_evidence": [
+          "SHA‑256 hash of the frozen plan recorded in .autonomy/state.json.",
+          "CI build log showing `npm ci` and `npm test` completing without errors.",
+          "JSON test report (e.g., test-report.json) indicating all assertions passed.",
+          "Programmatic evidence of RTL: the response body from GET / contains `<html lang=\"ar\" dir=\"rtl\">`.",
+          "Evidence of persistence: test logs showing POSTed institution ID appears in subsequent GET response.",
+          "README excerpt with exact commands and description of development vs test persistence modes."
+        ],
+        "intended_files": [
+          "package.json",
+          "server.js",
+          "schema/institution.schema.json",
+          "data/institutions.seed.json",
+          "public/index.html",
+          "public/app.js",
+          "tests/app.test.js",
+          "README.md",
+          ".gitignore"
+        ],
+        "objective_alignment": "Create a minimal runnable Arabic RTL web application skeleton with synthetic data persistence, directly satisfying DoD-A (Operability) and DoD-B (Language/UX) as required by the SMART objective and the product goal.",
+        "risks": [
+          "Node runtime unavailable – mitigated by documenting the required Node version and failing fast if not present.",
+          "File‑system write permission issues in CI – mitigated by using in‑memory storage for test mode and only writing to data/ in development mode.",
+          "Potential zombie server processes – mitigated by explicit teardown hooks that kill the child process after each test suite.",
+          "Schema mismatch – mitigated by validating incoming POST bodies against the JSON schema before acceptance."
+        ],
+        "steps": [
+          "1. Choose a lightweight web stack: Node.js with Express and plain HTML/CSS/JS (no external secrets).",
+          "2. Add a package.json with scripts: \"dev\":\"node server.js\", \"test\":\"node test/runTests.js\" and a start script that launches the server in development mode.",
+          "3. Implement server.js that:",
+          "   - Serves static files from /public.",
+          "   - Provides a JSON API at /api/institutions.",
+          "   - Detects NODE_ENV:",
+          "       * In \"development\" mode uses a file‑based store at data/institutions.json (initializes the file with a predefined synthetic array if missing).",
+          "       * In \"test\" mode uses an in‑memory array that is reset for each test run.",
+          "   - Exposes GET /api/institutions and POST /api/institutions with validation against a strict JSON schema.",
+          "4. Define the synthetic Institution schema (JSON Schema) with required fields: id (uuid string), name (Arabic string), address (Arabic string), type (enum[\"public\",\"private\"]). Store schema in schema/institution.schema.json.",
+          "5. Create data/institutions.seed.json containing the explicit seed array:",
+          "   [",
+          "     {\"id\":\"1\",\"name\":\"المؤسسة العامة الأولى\",\"address\":\"شارع الملك عبدالعزيز، الرياض\",\"type\":\"public\"},",
+          "     {\"id\":\"2\",\"name\":\"المؤسسة الخاصة الثانية\",\"address\":\"طريق الملك فهد، جدة\",\"type\":\"private\"}",
+          "   ]",
+          "   server.js copies this file to data/institutions.json on first run in development mode.",
+          "6. Create public/index.html with <html lang=\"ar\" dir=\"rtl\"> and minimal Arabic UI text (e.g., \"قائمة المؤسسات\"). Include a placeholder div for the institution list.",
+          "7. Add public/app.js that fetches the institution list, renders it, and provides a simple form to add a new institution via fetch POST to the API.",
+          "8. Write README.md section documenting:",
+          "   - Prerequisites (Node >=14).",
+          "   - Exact build/run command: `npm ci && npm run dev`.",
+          "   - How persistence works in each mode.",
+          "   - How to run the automated test suite: `npm test`.",
+          "9. Implement automated tests in tests/app.test.js using Mocha (or node's built‑in assert) with SuperTest:",
+          "   - Test that the server starts in test mode and GET / returns HTML containing `<html lang=\"ar\" dir=\"rtl\">`.",
+          "   - Positive test: POST a valid institution (Arabic fields) and then GET /api/institutions to verify the new record appears.",
+          "   - Negative test: POST an invalid institution (e.g., missing \"name\" or invalid \"type\") and assert the response status is 400.",
+          "   - Test that the seed data is loaded in development mode by spawning the server with NODE_ENV=\"development\" and verifying GET /api/institutions returns the two Arabic records defined in the seed file.",
+          "   - Use async/await for all async operations and ensure proper teardown by killing the server process after each test suite.",
+          "10. Add .gitignore entries for node_modules, data/, and any temporary test artifacts (e.g., .nyc_output, coverage).",
+          "11. Update the existing CI workflow to run `npm ci && npm test` on each push (no conditional fallbacks)."
+        ],
+        "verification": [
+          "Running `npm ci && npm run dev` starts the server and exits with code 0.",
+          "Automated test suite (`npm test`) completes with exit code 0 and all assertions pass.",
+          "Test 1 asserts the HTTP GET / response contains `<html lang=\"ar\" dir=\"rtl\">`.",
+          "Test 2 posts a valid institution (Arabic fields) and then GETs the list to verify the record appears, proving in‑memory persistence in test mode.",
+          "Test 3 posts invalid data and asserts a 400 response, confirming schema validation.",
+          "Test 4 starts the server in development mode, reads data/institutions.json (seeded from institutions.seed.json), and verifies the two Arabic records are present.",
+          "CI logs show successful npm install, server start in test mode, and all test assertions passed.",
+          "README contains reproducible commands that a fresh clone can execute without manual steps."
+        ]
+      },
+      "review": {
+        "comments": "The plan is well-structured, cycle-sized, and directly addresses the BOOTSTRAP state by establishing the minimal viable product shell. It correctly prioritizes DoD-A (Operability) and DoD-B (Language/UX) with clear acceptance criteria for RTL and persistence. The separation of concerns between development (file-based) and test (in-memory) modes is sound. The only minor gap is the explicit mention of `package-lock.json` generation, which is critical for the `npm ci` command to function in CI environments. Otherwise, the plan is safe, verifiable, and ready for execution.",
+        "critical_issues": [],
+        "decision": "APPROVE",
+        "risks": [
+          "The plan relies on `npm ci` in Step 11 and Verification, but Step 2 only mentions creating `package.json`. A `package-lock.json` must be generated and committed for `npm ci` to work reliably in CI. The plan should explicitly include generating and committing `package-lock.json`.",
+          "Step 9 suggests using Mocha/SuperTest but also mentions 'node's built-in assert'. The plan must explicitly list `mocha`, `supertest`, and `express` as dependencies in `package.json` to ensure the test suite is runnable."
+        ],
+        "verification_gaps": []
+      },
+      "revision": 2
+    }
+  ]
+}

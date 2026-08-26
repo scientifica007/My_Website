@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "collector_json",
+    "planner_json",
+    "reviewer_json"
+  ],
+  "completed_at": "2026-08-26T16:14:12+00:00",
+  "models": {
+    "collector": "qwen/qwen3.6-27b",
+    "planner": "openai/gpt-oss-120b",
+    "reviewer": "qwen/qwen3.6-27b"
+  },
+  "passed": true,
+  "schema_version": 1,
+  "scope": "synthetic technical PDSA dry run; no product-development decision",
+  "started_at": "2026-08-26T16:14:10+00:00"
+}
