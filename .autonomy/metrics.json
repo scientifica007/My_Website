@@ -1,16 +1,16 @@
 {
-  "ai_calls": 19,
+  "ai_calls": 24,
   "ai_calls_by_role": {
     "act_analyst": 1,
-    "collector": 2,
+    "collector": 3,
     "executor": 1,
-    "planner": 7,
-    "reviewer": 7,
+    "planner": 9,
+    "reviewer": 9,
     "study_analyst": 1
   },
   "autonomous_decision_blocks": 1,
   "cycles_completed": 2,
-  "cycles_started": 2,
+  "cycles_started": 3,
   "execution_failures": 1,
   "final_audit_failures": 0,
   "final_audits": 0,
@@ -18,14 +18,14 @@
   "human_development_interventions": 0,
   "human_infrastructure_interventions": 0,
   "models_used": {
-    "openai/gpt-oss-120b": 8,
-    "qwen/qwen3.6-27b": 11
+    "openai/gpt-oss-120b": 10,
+    "qwen/qwen3.6-27b": 14
   },
-  "plan_revisions": 5,
-  "plans_rejected": 6,
+  "plan_revisions": 6,
+  "plans_rejected": 7,
   "repeated_errors": 0,
-  "reported_input_tokens": 54288,
-  "reported_output_tokens": 19069,
+  "reported_input_tokens": 67185,
+  "reported_output_tokens": 22815,
   "rollbacks": 1,
   "schema_version": 1,
   "started_at": "2026-08-26T16:14:13+00:00",

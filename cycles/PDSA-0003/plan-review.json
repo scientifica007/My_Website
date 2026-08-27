@@ -1,0 +1,157 @@
+{
+  "approved": true,
+  "history": [
+    {
+      "plan": {
+        "allowed_fallbacks": [
+          "If Node.js is unavailable in the execution environment, switch to a Python Flask server (add `requirements.txt`, `app.py`, and adjust `npm start` to `python -m flask run`).",
+          "If static serving of JSON fails, embed the JSON directly into the client script as a fallback constant.",
+          "If linting tools cannot be installed, skip lint step but still require tests to pass."
+        ],
+        "expected_evidence": [
+          "Commit SHA referencing all new files.",
+          "CI workflow logs showing `npm install`, `npm start`, and successful server start.",
+          "Browser screenshot (or saved HTML) demonstrating `lang=\"ar\"`, `dir=\"rtl\"`, Arabic label, and populated institution list.",
+          "Test report JSON (`npm test -- --json`) with all tests passing.",
+          "Lint report with zero errors.",
+          "README excerpt with exact run command and expected URL."
+        ],
+        "intended_files": [
+          "package.json",
+          "server.js",
+          "public/index.html",
+          "public/app.js",
+          "public/style.css",
+          "README.md (updated)",
+          "tests/app.test.js",
+          ".eslintrc.json"
+        ],
+        "objective_alignment": "Creates a minimal viable Arabic RTL web application skeleton that loads and displays synthetic institution data, directly satisfying the SMART objective and the first operability criteria of the Definition of Done.",
+        "risks": [
+          "Choosing a stack that requires unavailable system dependencies (e.g., native binaries) – mitigated by using pure JavaScript/Node.js.",
+          "Incorrect RTL handling causing layout issues – mitigated by explicit `dir=\"rtl\"` and simple CSS.",
+          "Fetching JSON from wrong path leading to 404 – mitigated by serving the `data/` folder as static assets.",
+          "Tests may be flaky if the server port is hard‑coded – mitigated by using a random free port in test setup.",
+          "Accidental commit of large binary files or secrets – mitigated by reviewing `git status` before commit and using `.gitignore`."
+        ],
+        "steps": [
+          "1. Choose a lightweight stack (e.g., Node.js with Express + plain HTML/CSS/JS) that can be installed from package.json without external secrets.",
+          "2. Add a `package.json` with scripts: `npm install` and `npm start` (runs `node server.js`).",
+          "3. Implement `server.js` to serve static files from a `public/` directory and expose an endpoint `/data/institutions.json` that returns the existing synthetic JSON file.",
+          "4. Create `public/index.html` with `<html lang=\"ar\" dir=\"rtl\">` and basic RTL CSS (e.g., `body { direction: rtl; text-align: right; font-family: sans-serif; }`).",
+          "5. Add a small JavaScript module `public/app.js` that fetches `/data/institutions.json`, parses the list, and renders it into a `<ul>` with Arabic label `المؤسسات`.",
+          "6. Add minimal styling to ensure readability on desktop and small screens (responsive meta tag, simple flex layout).",
+          "7. Write a README section documenting how to run the app locally (`npm install && npm start`) and how to access it (`http://localhost:3000`).",
+          "8. Add a basic test suite under `tests/` using a framework like Jest or Mocha that:",
+          "   - Starts the server on a random port,",
+          "   - Requests the root page and checks for `lang=\"ar\"` and `dir=\"rtl\"` attributes,",
+          "   - Requests `/data/institutions.json` and verifies the JSON is served unchanged,",
+          "   - Checks that the rendered HTML contains the Arabic label `المؤسسات`.",
+          "9. Add an ESLint configuration to enforce no critical JavaScript errors and run lint as part of `npm test`.",
+          "10. Commit all new files (`package.json`, `server.js`, `public/`, `tests/`) with clear commit messages."
+        ],
+        "verification": [
+          "Run `npm install && npm start`; the command exits without errors and prints a listening port.",
+          "Open `http://localhost:3000` in a browser and confirm the page loads with `lang=\"ar\"` and `dir=\"rtl\"` attributes.",
+          "Observe the list of institutions rendered from `data/institutions.json`.",
+          "Check the browser console for the absence of uncaught JavaScript errors.",
+          "Execute `npm test`; all tests must pass, confirming server response, HTML attributes, and correct rendering of Arabic label.",
+          "Run `npm run lint`; lint must report zero errors."
+        ]
+      },
+      "review": {
+        "comments": "The plan is conceptually sound but operationally flawed. It must be revised to: 1) Remove the conditional fallback for linting to ensure consistent quality gates. 2) Explicitly include `.gitignore` in the file list. 3) Define the test runner configuration in `package.json` and `jest.config.js` (or equivalent). 4) Replace manual browser verification with an automated end-to-end test (e.g., using Puppeteer) or a more rigorous unit test that mocks the fetch and verifies DOM manipulation, ensuring the 'dynamic' aspect of the app is verified autonomously.",
+        "critical_issues": [
+          "The plan contains a logical contradiction in the verification and fallback sections: it mandates running `npm test` and `npm run lint` as primary verification steps, but the fallback section explicitly allows skipping linting if tools cannot be installed. This violates the requirement for a deterministic, verifiable plan.",
+          "The plan fails to address the 'No tests for product functionality exist' gap identified in the objective evidence by proposing a test suite (`tests/app.test.js`) without specifying the test runner configuration (e.g., Jest config) or how the test environment will be initialized in the `package.json`. This makes the verification step 'Execute npm test' ambiguous and likely to fail.",
+          "The plan does not explicitly include a `.gitignore` file in the `intended_files` list, despite listing 'Accidental commit of large binary files or secrets' as a risk. This is a critical safety oversight for a public repository."
+        ],
+        "decision": "REVISE",
+        "risks": [
+          "Using a 'random free port' in tests without a robust teardown mechanism may lead to port conflicts in subsequent cycles if the server process is not properly killed.",
+          "The fallback to Python Flask introduces a mixed-language environment (Node.js for frontend/tooling, Python for backend) which increases complexity and maintenance burden without a clear justification for why Node.js is insufficient."
+        ],
+        "verification_gaps": [
+          "The verification step 'Open http://localhost:3000 in a browser' is not automatable in a headless CI/CD environment without additional tooling (e.g., Puppeteer or Playwright). The plan relies on manual verification for a critical acceptance criterion (RTL rendering and data display), which contradicts the autonomous nature of the experiment.",
+          "The plan does not specify how the test suite will verify the *rendered* HTML content (i.e., that the JavaScript actually executed and populated the list). The proposed tests only check for the presence of the Arabic label in the static HTML or server response, which does not prove the dynamic data loading works."
+        ]
+      },
+      "revision": 0
+    },
+    {
+      "plan": {
+        "allowed_fallbacks": [
+          "If the execution environment lacks Node.js, switch to a pure Python Flask implementation (`app.py`, `requirements.txt`) and replace `npm start` with `python -m flask run`. All other steps (HTML, CSS, JS, tests) remain the same, with Jest tests replaced by `pytest` + `playwright` equivalents.",
+          "If fetching the JSON file fails due to static serving issues, embed the JSON data directly in `app.js` as a constant fallback."
+        ],
+        "expected_evidence": [
+          "Commit SHA that includes all new files.",
+          "CI pipeline logs showing `npm install`, server start, successful Jest test run, and lint pass.",
+          "Generated test report JSON confirming e2e validation of RTL attributes, Arabic label, and correct number of list items.",
+          "ESLint report file with zero issues.",
+          "Updated README excerpt with exact run commands and expected URL."
+        ],
+        "intended_files": [
+          "package.json",
+          "jest.config.js",
+          "server.js",
+          "public/index.html",
+          "public/app.js",
+          "public/style.css",
+          "README.md (updated)",
+          "tests/e2e.test.js",
+          "tests/fetchData.test.js",
+          ".eslintrc.json",
+          ".gitignore"
+        ],
+        "objective_alignment": "Creates a minimal viable Arabic RTL web application skeleton that loads and displays synthetic institution data, directly satisfying the SMART objective and the first operability criteria of the Definition of Done.",
+        "risks": [
+          "Node.js version incompatibility – mitigated by specifying an LTS version in `engines` field of package.json.",
+          "Port leakage in CI – mitigated by using the `get-port` library to allocate a free port and ensuring the server process is terminated after tests.",
+          "Puppeteer binary size – mitigated by using the `puppeteer-core` package with a pre‑installed Chrome binary in the CI environment.",
+          "Accidental inclusion of large files – mitigated by the explicit `.gitignore`."
+        ],
+        "steps": [
+          "1. Choose a lightweight stack: Node.js with Express for the server and plain HTML/CSS/JS for the client. All dependencies are declared in package.json and require no external secrets.",
+          "2. Add a `package.json` that defines scripts: `npm install`, `npm start` (runs `node server.js`), `npm test` (runs Jest), and `npm run lint` (runs ESLint). Include Jest and Puppeteer as devDependencies.",
+          "3. Create `jest.config.js` to configure the test environment for Node and to allow Puppeteer tests.",
+          "4. Implement `server.js` to serve static files from the `public/` directory and expose the `data/` folder as a static route (`/data`). The server listens on a port provided by the `PORT` environment variable or defaults to 3000.",
+          "5. Add a `.gitignore` file that excludes `node_modules/`, `coverage/`, and any generated logs or OS files.",
+          "6. Create `public/index.html` with `<html lang=\"ar\" dir=\"rtl\">` and a placeholder `<ul id=\"institution-list\"></ul>` preceded by an Arabic heading `<h1>المؤسسات</h1>`.",
+          "7. Add `public/style.css` with explicit RTL styling (e.g., `body { direction: rtl; text-align: right; font-family: sans-serif; margin: 0; padding: 1rem; }`).",
+          "8. Add `public/app.js` that fetches `/data/institutions.json`, parses the JSON, and populates the `<ul id=\"institution-list\">` with `<li>` elements containing the institution names.",
+          "9. Update `README.md` with a clear “Running the Application” section that documents the commands `npm install && npm start` and the URL `http://localhost:3000`.",
+          "10. Write an end‑to‑end test `tests/e2e.test.js` using Puppeteer that:",
+          "    - Starts the server on a random free port,",
+          "    - Navigates to `http://localhost:<port>` in a headless Chromium instance,",
+          "    - Verifies that the `<html>` element has `lang=\"ar\"` and `dir=\"rtl\"`,",
+          "    - Checks that the heading text is exactly `المؤسسات`,",
+          "    - Waits for the list items to be rendered and asserts that the number of `<li>` elements matches the length of the JSON array,",
+          "    - Confirms that no console errors of type `error` appear during page load.",
+          "11. Add a unit test `tests/fetchData.test.js` that mocks the `fetch` call and verifies that `app.js` correctly updates the DOM when given a sample JSON payload.",
+          "12. Add an ESLint configuration `.eslintrc.json` that enforces no `no-console` errors and uses the recommended ruleset.",
+          "13. Commit all new files with descriptive commit messages, ensuring the commit SHA is recorded for evidence."
+        ],
+        "verification": [
+          "Run `npm install && npm start`; the command must exit with status 0 and output a listening port message.",
+          "Execute `npm test`; all Jest tests (unit and e2e) must pass with a 100% success rate.",
+          "Run `npm run lint`; ESLint must report zero errors or warnings.",
+          "CI workflow logs must show successful installation, server start, test execution, and linting.",
+          "The e2e test provides a JSON report (`npm test -- --outputFile=report.json`) confirming that the RTL attributes, Arabic heading, and dynamic list rendering succeeded.",
+          "The commit SHA referenced in the evidence must contain all intended files."
+        ]
+      },
+      "review": {
+        "comments": "The plan is well-structured, cycle-sized, and directly addresses the critical gap of having no functional application. It correctly identifies the need for a minimal skeleton to satisfy the 'Operability' criteria of the Definition of Done. The inclusion of both unit and E2E tests ensures verifiability. The fallback to Python/Flask is a reasonable contingency. The plan is safe, uses synthetic data only, and requires no secrets. It is approved for execution.",
+        "critical_issues": [],
+        "decision": "APPROVE",
+        "risks": [
+          "Puppeteer E2E tests require a browser binary; ensure the CI environment or local execution context has Chromium installed or uses `puppeteer` (not just `puppeteer-core`) for local dev to avoid 'no binary found' errors.",
+          "The plan relies on `fetch` in `app.js`; ensure the target browser environment supports `fetch` (modern browsers do, but older ones might not). Given the 'modern' stack assumption, this is low risk but worth noting."
+        ],
+        "verification_gaps": []
+      },
+      "revision": 1
+    }
+  ]
+}

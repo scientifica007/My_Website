@@ -1,0 +1,36 @@
+{
+  "acceptance_criteria": [
+    "A local development server can be started via a documented command (e.g., npm start or python -m http.server).",
+    "The main page loads in a browser with `dir=\"rtl\"` and `lang=\"ar\"` attributes set.",
+    "The UI displays the list of institutions from `data/institutions.json`.",
+    "The interface uses Arabic terminology for labels (e.g., 'المؤسسات' instead of 'Institutions').",
+    "No critical JavaScript errors occur in the browser console upon loading.",
+    "The code is committed to the repository with a clear entry point."
+  ],
+  "classifications": [
+    "INFRASTRUCTURE_MISSING",
+    "PRODUCT_GAP_CRITICAL",
+    "NO_UI_IMPLEMENTATION"
+  ],
+  "evidence": [
+    "README.md states status: BOOTSTRAP / NOT ARMED",
+    "Repository tree shows only governance scripts (scripts/autonomy) and synthetic data (data/institutions.json)",
+    "No frontend files (HTML/CSS/JS/React/etc.) exist",
+    "No backend server code exists",
+    "No tests for product functionality exist (only governance tests)",
+    "DEFINITION_OF_DONE.md requires a runnable web app with Arabic RTL interface"
+  ],
+  "rationale": "Before implementing complex inspection workflows or legal corpus features, the project must establish a functional baseline. The current state has zero product code. Building a minimal skeleton that proves the stack can serve Arabic RTL content and read the existing synthetic data is the smallest step that moves the project from 'Bootstrap' to 'Functional Prototype'. This satisfies the first part of Definition of Done (A: Operability) and sets the stage for subsequent cycles to add features.",
+  "remaining_goal_gaps": [
+    "Inspection visit recording and evidence attachment",
+    "Observation to recommendation workflow",
+    "Recommendation tracking and follow-up",
+    "Legal corpus management and search",
+    "Report generation",
+    "Data persistence beyond local JSON (if required by DoD)",
+    "Comprehensive testing suite for product features",
+    "Deployment documentation"
+  ],
+  "smart_objective": "Create a minimal viable web application skeleton that serves an Arabic RTL interface, loads synthetic institution data from data/institutions.json, and displays it in a list, ensuring the application runs locally without errors.",
+  "summary": "The project is in a BOOTSTRAP state. The repository contains governance infrastructure (PDSA scripts, policies) and synthetic data for institutions, but lacks the actual web application code (frontend/backend) required to meet the Product Goal. The most critical gap is the absence of a functional application skeleton that supports Arabic RTL and basic data persistence."
+}

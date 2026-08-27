@@ -1,16 +1,17 @@
 {
   "armed": true,
-  "current_cycle": 2,
-  "current_stage": "READY_FOR_NEXT_CYCLE",
-  "experiment_state": "ACTIVE",
+  "current_cycle": 3,
+  "current_stage": "INFRASTRUCTURE_BLOCKED",
+  "experiment_state": "INFRASTRUCTURE_BLOCKED",
   "final_audit_status": "NOT_REQUESTED",
   "finished_at": null,
   "human_development_interventions": 0,
   "human_infrastructure_interventions": 0,
-  "infrastructure_status": "AVAILABLE",
+  "infrastructure_status": "BLOCKED",
   "last_completed_cycle": 2,
-  "last_run_at": "2026-08-26T20:03:20+00:00",
-  "last_run_result": "PLANNING_ABORT_RECORDED",
+  "last_error": "AI provider HTTP 413: {\"error\":{\"message\":\"Request too large for model `openai/gpt-oss-120b` in organization `org_01m0zb26r6e5jv4cdtdefe2krw` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 8810, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+  "last_run_at": "2026-08-27T09:46:28+00:00",
+  "last_run_result": "AUTONOMY_ERROR",
   "notes": [
     "Bootstrap changes are outside the autonomous-development measurement window.",
     "Do not set armed=true until bootstrap validation and provider configuration succeed."
