@@ -6,16 +6,23 @@
   "final_audit_status": "NOT_REQUESTED",
   "finished_at": null,
   "human_development_interventions": 0,
-  "human_infrastructure_interventions": 0,
+  "human_infrastructure_interventions": 1,
   "infrastructure_status": "BLOCKED",
   "last_completed_cycle": 2,
-  "last_error": "AI provider HTTP 413: {\"error\":{\"message\":\"Request too large for model `openai/gpt-oss-120b` in organization `org_01m0zb26r6e5jv4cdtdefe2krw` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 8810, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+  "last_error": "AI provider HTTP 413: request exceeded observed Groq 8000 TPM ceiling during the first executor call for frozen PDSA-0003; infrastructure repair installed capacity admission plus exact frozen-cycle resume.",
   "last_run_at": "2026-08-27T09:46:28+00:00",
-  "last_run_result": "AUTONOMY_ERROR",
+  "last_run_result": "INFRASTRUCTURE_REPAIR_STAGED_FOR_FROZEN_CYCLE_RESUME",
+  "resume_required": true,
+  "resume_cycle": 3,
+  "resume_stage": "DO",
+  "resume_frozen_plan_sha256": "163392a11c210240f36013027cf4e7a499febe18cef5e6f35251b656aae4220b",
+  "resume_intervention_id": "HIIC-001",
+  "resume_completed_at": null,
   "notes": [
     "Bootstrap changes are outside the autonomous-development measurement window.",
-    "Do not set armed=true until bootstrap validation and provider configuration succeed."
+    "Do not set armed=true until bootstrap validation and provider configuration succeed.",
+    "HIIC-001 is infrastructure-only: it preserves the already approved PDSA-0003 SMART objective and Frozen Plan and must resume at Do rather than create a new cycle."
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "started_at": "2026-08-26T16:14:13+00:00"
 }
