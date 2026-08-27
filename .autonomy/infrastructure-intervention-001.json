@@ -1,0 +1,29 @@
+{
+  "schema": "MY-WEBSITE-INFRASTRUCTURE-INTERVENTION-001",
+  "intervention_id": "HIIC-001",
+  "recorded_at": "2026-08-27T17:04:12+00:00",
+  "classification": "HUMAN_INFRASTRUCTURE_INTERVENTION",
+  "trigger": "Groq HTTP 413 during the first executor request of already frozen PDSA-0003",
+  "observed_provider_limit": {
+    "tokens_per_minute": 8000,
+    "rejected_request_tokens": 8810
+  },
+  "scope": [
+    "Add deterministic provider request admission with safety margin.",
+    "For executor requests preserve the Frozen Plan and SMART Objective completely and compact repository context only.",
+    "Resume the same PDSA-0003 at Do from its immutable frozen Plan instead of creating PDSA-0004."
+  ],
+  "preserved": {
+    "cycle": 3,
+    "smart_objective_unchanged": true,
+    "frozen_plan_unchanged": true,
+    "frozen_plan_sha256": "163392a11c210240f36013027cf4e7a499febe18cef5e6f35251b656aae4220b",
+    "product_files_changed_by_intervention": false,
+    "development_decision_supplied_by_human": false
+  },
+  "metrics_effect": {
+    "HDIC_increment": 0,
+    "HIIC_increment": 1
+  },
+  "status": "REPAIR_STAGED_PENDING_CI_AND_RESUME"
+}
