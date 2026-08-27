@@ -412,118 +412,40 @@ def close_planning_failure(
     metrics["autonomous_decision_blocks"] = int(metrics.get("autonomous_decision_blocks", 0)) + 1
 
 
-def run_cycle(ai: AIProvider, state: dict[str, Any], metrics: dict[str, Any]) -> None:
-    policy = load_json(POLICY)
-    cycle_number = int(state.get("current_cycle", 0)) + 1
+def execute_frozen_cycle(
+    ai: AIProvider,
+    state: dict[str, Any],
+    metrics: dict[str, Any],
+    cycle_number: int,
+    objective: dict[str, Any],
+    *,
+    base_context: str | None = None,
+) -> None:
+    """Execute Do→Verify→Study→Act for an already immutable cycle Plan."""
     cycle_dir = CYCLES / f"PDSA-{cycle_number:04d}"
-    if cycle_dir.exists():
-        raise GovernanceError(f"cycle already exists: {cycle_dir.name}")
-    cycle_dir.mkdir(parents=True)
-    state["current_cycle"] = cycle_number
-    state["current_stage"] = "COLLECT"
-    metrics["cycles_started"] = int(metrics.get("cycles_started", 0)) + 1
-    save_json(STATE, state)
-    save_json(METRICS, metrics)
-
-    base_context = context()
-    objective = ai.ask_json(
-        "collector",
-        role_system("collector"),
-        f"""Collect/classify current evidence and choose exactly one next SMART objective.
-Return JSON keys:
-summary, classifications (array), evidence (array), smart_objective,
-acceptance_criteria (array), rationale, remaining_goal_gaps (array).
-
-REPOSITORY:
-{base_context}
-""",
-        max_tokens=2600,
-    )
-    write_once(cycle_dir / "collection.json", objective)
-
-    state["current_stage"] = "PLAN"
-    save_json(STATE, state)
-    plan = ai.ask_json(
-        "planner",
-        role_system("planner"),
-        f"""Design the cycle plan.
-Return JSON keys:
-objective_alignment, steps (array), intended_files (array), verification (array),
-risks (array), allowed_fallbacks (array), expected_evidence (array).
-
-OBJECTIVE:
-{json.dumps(objective, ensure_ascii=False)}
-
-CONTEXT:
-{base_context}
-""",
-        max_tokens=3200,
-    )
-
-    history: list[dict[str, Any]] = []
-    approved = False
-    max_revisions = int(policy.get("max_plan_revisions", 3))
-    for index in range(max_revisions + 1):
-        state["current_stage"] = "PLAN_REVIEW"
-        save_json(STATE, state)
-        review = ai.ask_json(
-            "reviewer",
-            role_system("reviewer"),
-            f"""Review the plan and return:
-{{"decision":"APPROVE|REVISE","critical_issues":[],"verification_gaps":[],"risks":[],"comments":"..."}}.
-
-OBJECTIVE:
-{json.dumps(objective, ensure_ascii=False)}
-
-PLAN:
-{json.dumps(plan, ensure_ascii=False)}
-""",
-            max_tokens=2000,
-        )
-        history.append({"revision": index, "plan": plan, "review": review})
-        if review.get("decision") == "APPROVE":
-            approved = True
-            break
-        metrics["plans_rejected"] = int(metrics.get("plans_rejected", 0)) + 1
-        if index == max_revisions:
-            break
-        state["current_stage"] = "PLAN_REVISION"
-        save_json(STATE, state)
-        metrics["plan_revisions"] = int(metrics.get("plan_revisions", 0)) + 1
-        plan = ai.ask_json(
-            "planner",
-            role_system("planner"),
-            f"""Revise the plan to resolve the review while keeping the SMART objective fixed.
-Return the full plan object with the same keys.
-
-OBJECTIVE:
-{json.dumps(objective, ensure_ascii=False)}
-CURRENT PLAN:
-{json.dumps(plan, ensure_ascii=False)}
-REVIEW:
-{json.dumps(review, ensure_ascii=False)}
-""",
-            max_tokens=3200,
-        )
-
-    write_once(cycle_dir / "plan-review.json", {"approved": approved, "history": history})
-    if not approved:
-        close_planning_failure(cycle_dir, state, metrics, history)
-        metrics["cycles_completed"] = int(metrics.get("cycles_completed", 0)) + 1
-        state["last_completed_cycle"] = cycle_number
-        save_json(STATE, state)
-        save_json(METRICS, metrics)
-        return
-
     plan_path = cycle_dir / "plan.md"
-    plan_path.write_text(render_plan(objective, plan), encoding="utf-8")
-    digest = freeze_plan(cycle_dir)
-    state["current_stage"] = "PLAN_FROZEN"
-    save_json(STATE, state)
+    freeze_path = cycle_dir / "plan.freeze.json"
+    if not plan_path.is_file() or not freeze_path.is_file():
+        raise GovernanceError(f"cannot execute unfrozen cycle: {cycle_dir.name}")
+    assert_plan_frozen(cycle_dir)
+    freeze_record = load_json(freeze_path)
+    digest = freeze_record.get("sha256")
+    if not isinstance(digest, str) or not digest:
+        raise GovernanceError("frozen cycle lacks sha256 evidence")
+    for historical in ("execution.json", "verification.json", "study.json", "act.json", "cycle-status.json"):
+        if (cycle_dir / historical).exists():
+            raise GovernanceError(
+                f"resume/execution refuses partially materialized lifecycle artifact: {cycle_dir.name}/{historical}"
+            )
 
     state["current_stage"] = "DO"
     save_json(STATE, state)
-    executor = ask_executor(ai, objective, plan_path.read_text(encoding="utf-8"), base_context)
+    executor = ask_executor(
+        ai,
+        objective,
+        plan_path.read_text(encoding="utf-8"),
+        base_context if base_context is not None else context(),
+    )
     if executor.get("status") != "EXECUTE":
         raise GovernanceError("executor did not return EXECUTE after context allowance")
     operations = executor.get("operations", [])
@@ -631,13 +553,164 @@ STUDY:
     metrics["cycles_completed"] = int(metrics.get("cycles_completed", 0)) + 1
     state["last_completed_cycle"] = cycle_number
     state["last_run_result"] = "CYCLE_COMPLETED"
+    if state.get("resume_required"):
+        state["resume_required"] = False
+        state["resume_completed_at"] = utc_now()
     if bool(act.get("final_audit_recommended")):
         state["experiment_state"] = "FINAL_AUDIT_PENDING"
         state["current_stage"] = "FINAL_AUDIT_PENDING"
     else:
+        state["experiment_state"] = "ACTIVE"
         state["current_stage"] = "READY_FOR_NEXT_CYCLE"
+    state["infrastructure_status"] = "AVAILABLE"
+    state["last_error"] = None
     save_json(STATE, state)
     save_json(METRICS, metrics)
+
+
+def resume_frozen_cycle(ai: AIProvider, state: dict[str, Any], metrics: dict[str, Any]) -> None:
+    """Resume the exact frozen cycle blocked before Do by external infrastructure."""
+    if state.get("resume_required") is not True:
+        raise GovernanceError("INFRASTRUCTURE_BLOCKED state lacks an authorized resume checkpoint")
+    cycle_number = int(state.get("resume_cycle", 0))
+    if cycle_number != int(state.get("current_cycle", 0)):
+        raise GovernanceError("resume checkpoint cycle does not equal current_cycle")
+    if cycle_number <= int(state.get("last_completed_cycle", 0)):
+        raise GovernanceError("resume checkpoint points to an already completed cycle")
+    if state.get("resume_stage") != "DO":
+        raise GovernanceError("only a frozen pre-Do infrastructure checkpoint may be resumed")
+
+    cycle_dir = CYCLES / f"PDSA-{cycle_number:04d}"
+    collection = cycle_dir / "collection.json"
+    review = cycle_dir / "plan-review.json"
+    if not collection.is_file() or not review.is_file():
+        raise GovernanceError("resume checkpoint lacks immutable planning evidence")
+    review_record = load_json(review)
+    if review_record.get("approved") is not True:
+        raise GovernanceError("resume checkpoint Plan was not approved")
+    assert_plan_frozen(cycle_dir)
+    freeze_record = load_json(cycle_dir / "plan.freeze.json")
+    expected_digest = state.get("resume_frozen_plan_sha256")
+    if expected_digest and freeze_record.get("sha256") != expected_digest:
+        raise GovernanceError("resume checkpoint Frozen Plan digest mismatch")
+
+    objective = load_json(collection)
+    state["experiment_state"] = "ACTIVE"
+    state["current_stage"] = "RESUMING_FROZEN_DO"
+    state["infrastructure_status"] = "AVAILABLE"
+    save_json(STATE, state)
+    execute_frozen_cycle(ai, state, metrics, cycle_number, objective, base_context=context())
+
+
+def run_cycle(ai: AIProvider, state: dict[str, Any], metrics: dict[str, Any]) -> None:
+    policy = load_json(POLICY)
+    cycle_number = int(state.get("current_cycle", 0)) + 1
+    cycle_dir = CYCLES / f"PDSA-{cycle_number:04d}"
+    if cycle_dir.exists():
+        raise GovernanceError(f"cycle already exists: {cycle_dir.name}")
+    cycle_dir.mkdir(parents=True)
+    state["current_cycle"] = cycle_number
+    state["current_stage"] = "COLLECT"
+    metrics["cycles_started"] = int(metrics.get("cycles_started", 0)) + 1
+    save_json(STATE, state)
+    save_json(METRICS, metrics)
+
+    base_context = context()
+    objective = ai.ask_json(
+        "collector",
+        role_system("collector"),
+        f"""Collect/classify current evidence and choose exactly one next SMART objective.
+Return JSON keys:
+summary, classifications (array), evidence (array), smart_objective,
+acceptance_criteria (array), rationale, remaining_goal_gaps (array).
+
+REPOSITORY:
+{base_context}
+""",
+        max_tokens=2600,
+    )
+    write_once(cycle_dir / "collection.json", objective)
+
+    state["current_stage"] = "PLAN"
+    save_json(STATE, state)
+    plan = ai.ask_json(
+        "planner",
+        role_system("planner"),
+        f"""Design the cycle plan.
+Return JSON keys:
+objective_alignment, steps (array), intended_files (array), verification (array),
+risks (array), allowed_fallbacks (array), expected_evidence (array).
+
+OBJECTIVE:
+{json.dumps(objective, ensure_ascii=False)}
+
+CONTEXT:
+{base_context}
+""",
+        max_tokens=3200,
+    )
+
+    history: list[dict[str, Any]] = []
+    approved = False
+    max_revisions = int(policy.get("max_plan_revisions", 3))
+    for index in range(max_revisions + 1):
+        state["current_stage"] = "PLAN_REVIEW"
+        save_json(STATE, state)
+        review = ai.ask_json(
+            "reviewer",
+            role_system("reviewer"),
+            f"""Review the plan and return:
+{{"decision":"APPROVE|REVISE","critical_issues":[],"verification_gaps":[],"risks":[],"comments":"..."}}.
+
+OBJECTIVE:
+{json.dumps(objective, ensure_ascii=False)}
+
+PLAN:
+{json.dumps(plan, ensure_ascii=False)}
+""",
+            max_tokens=2000,
+        )
+        history.append({"revision": index, "plan": plan, "review": review})
+        if review.get("decision") == "APPROVE":
+            approved = True
+            break
+        metrics["plans_rejected"] = int(metrics.get("plans_rejected", 0)) + 1
+        if index == max_revisions:
+            break
+        state["current_stage"] = "PLAN_REVISION"
+        save_json(STATE, state)
+        metrics["plan_revisions"] = int(metrics.get("plan_revisions", 0)) + 1
+        plan = ai.ask_json(
+            "planner",
+            role_system("planner"),
+            f"""Revise the plan to resolve the review while keeping the SMART objective fixed.
+Return the full plan object with the same keys.
+
+OBJECTIVE:
+{json.dumps(objective, ensure_ascii=False)}
+CURRENT PLAN:
+{json.dumps(plan, ensure_ascii=False)}
+REVIEW:
+{json.dumps(review, ensure_ascii=False)}
+""",
+            max_tokens=3200,
+        )
+
+    write_once(cycle_dir / "plan-review.json", {"approved": approved, "history": history})
+    if not approved:
+        close_planning_failure(cycle_dir, state, metrics, history)
+        metrics["cycles_completed"] = int(metrics.get("cycles_completed", 0)) + 1
+        state["last_completed_cycle"] = cycle_number
+        save_json(STATE, state)
+        save_json(METRICS, metrics)
+        return
+
+    plan_path = cycle_dir / "plan.md"
+    plan_path.write_text(render_plan(objective, plan), encoding="utf-8")
+    freeze_plan(cycle_dir)
+    state["current_stage"] = "PLAN_FROZEN"
+    save_json(STATE, state)
+    execute_frozen_cycle(ai, state, metrics, cycle_number, objective, base_context=base_context)
 
 
 def run_final_audit(ai: AIProvider, state: dict[str, Any], metrics: dict[str, Any]) -> None:
@@ -712,9 +785,7 @@ def main() -> int:
         elif state["experiment_state"] == "ACTIVE":
             run_cycle(ai, state, metrics)
         elif state["experiment_state"] == "INFRASTRUCTURE_BLOCKED":
-            state["experiment_state"] = "ACTIVE"
-            state["current_stage"] = "READY_FOR_NEXT_CYCLE"
-            run_cycle(ai, state, metrics)
+            resume_frozen_cycle(ai, state, metrics)
         else:
             raise GovernanceError(
                 f"armed controller refuses state {state.get('experiment_state')!r}"
