@@ -16,7 +16,7 @@
   "final_audits": 0,
   "final_candidate_at": null,
   "human_development_interventions": 0,
-  "human_infrastructure_interventions": 0,
+  "human_infrastructure_interventions": 1,
   "models_used": {
     "openai/gpt-oss-120b": 10,
     "qwen/qwen3.6-27b": 14
@@ -26,8 +26,11 @@
   "repeated_errors": 0,
   "reported_input_tokens": 67185,
   "reported_output_tokens": 22815,
+  "request_compactions": 0,
+  "max_estimated_admitted_tokens": 0,
+  "last_admission": null,
   "rollbacks": 1,
-  "schema_version": 1,
+  "schema_version": 2,
   "started_at": "2026-08-26T16:14:13+00:00",
   "verification_failures": 1
 }

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "protocol": "openai-compatible-chat-completions",
   "base_url_env": "AI_BASE_URL",
   "api_key_env": "AI_API_KEY",
@@ -13,10 +13,28 @@
     "act_analyst": "qwen/qwen3.6-27b",
     "final_auditor": "openai/gpt-oss-120b"
   },
+  "capacity": {
+    "source": "Observed Groq on-demand organization TPM limit during PDSA-0003 infrastructure failure",
+    "organization_tpm_limit": 8000,
+    "max_admitted_request_tokens": 6500,
+    "safety_margin_tokens": 1500,
+    "conservative_chars_per_token": 2.5,
+    "message_overhead_tokens": 256,
+    "minimum_context_characters": 800,
+    "role_completion_caps": {
+      "collector": 1000,
+      "planner": 1400,
+      "reviewer": 800,
+      "executor": 2400,
+      "study_analyst": 1000,
+      "act_analyst": 700,
+      "final_auditor": 1400
+    }
+  },
   "request": {
     "temperature": 0.2,
     "reasoning_effort": "low",
-    "timeout_seconds": 120,
+    "timeout_seconds": 180,
     "retry_429": 4,
     "minimum_retry_seconds": 10
   },
@@ -25,6 +43,8 @@
     "The defaults target Groq's OpenAI-compatible endpoint but may be replaced without changing PDSA governance.",
     "Qwen JSON roles run with reasoning disabled in the provider to avoid consuming the free-tier output budget before a valid JSON document is completed.",
     "GPT-OSS roles use low reasoning by default to preserve enough completion budget for structured output.",
+    "Capacity admission is conservative and keeps each request below the observed Groq TPM ceiling with a fixed safety margin.",
+    "For executor calls, the Frozen Plan and SMART Objective are protected from compaction; only repository context may be reduced.",
     "The API key must exist only as a GitHub Actions secret named AI_API_KEY."
   ]
 }
