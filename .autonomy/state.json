@@ -10,7 +10,7 @@
   "infrastructure_status": "BLOCKED",
   "last_completed_cycle": 2,
   "last_error": "provider capacity cannot preserve the complete Frozen Plan and SMART Objective while retaining the required repository-context floor (-164 < 800)",
-  "last_run_at": "2026-08-30T16:40:18+00:00",
+  "last_run_at": "2026-08-30T21:04:16+00:00",
   "last_run_result": "AUTONOMY_ERROR",
   "notes": [
     "Bootstrap changes are outside the autonomous-development measurement window.",
