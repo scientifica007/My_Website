@@ -6,7 +6,7 @@
   "final_audit_status": "NOT_REQUESTED",
   "finished_at": null,
   "human_development_interventions": 0,
-  "human_infrastructure_interventions": 1,
+  "human_infrastructure_interventions": 2,
   "infrastructure_status": "BLOCKED",
   "last_completed_cycle": 2,
   "last_error": "provider capacity cannot preserve the complete Frozen Plan and SMART Objective while retaining the required repository-context floor (-164 < 800)",
@@ -15,7 +15,8 @@
   "notes": [
     "Bootstrap changes are outside the autonomous-development measurement window.",
     "Do not set armed=true until bootstrap validation and provider configuration succeed.",
-    "HIIC-001 is infrastructure-only: it preserves the already approved PDSA-0003 SMART objective and Frozen Plan and must resume at Do rather than create a new cycle."
+    "HIIC-001 is infrastructure-only: it preserves the already approved PDSA-0003 SMART objective and Frozen Plan and must resume at Do rather than create a new cycle.",
+    "HIIC-002 is the owner-directed scheduler pause on 2026-09-21 for architecture review; it changes no product decision, SMART Objective, or Frozen Plan."
   ],
   "resume_completed_at": null,
   "resume_cycle": 3,

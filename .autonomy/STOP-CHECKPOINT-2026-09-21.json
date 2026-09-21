@@ -24,7 +24,7 @@
     "resume_stage": "DO",
     "frozen_plan_sha256": "163392a11c210240f36013027cf4e7a499febe18cef5e6f35251b656aae4220b",
     "HDIC": 0,
-    "HIIC": 1,
+    "HIIC": 2,
     "last_error": "provider capacity cannot preserve the complete Frozen Plan and SMART Objective while retaining the required repository-context floor (-164 < 800)"
   },
   "branch_status": {
@@ -41,5 +41,11 @@
     "No START, run, new cycle, SMART Objective change, Frozen Plan change, or product decision until owner approves a restart architecture.",
     "PDSA-0003 remains the only resumable cycle and must resume from its immutable Frozen Plan at Do if restart is later authorized.",
     "Infrastructure failure must not be reclassified as product failure."
-  ]
+  ],
+  "intervention_accounting": {
+    "HIIC_001": "Provider-capacity and frozen-cycle resume infrastructure repair.",
+    "HIIC_002": "Owner-directed scheduler pause for architecture review after valid START.",
+    "HDIC": 0,
+    "note": "HIIC-002 records the stop operation itself; it does not alter the PDSA-0003 Frozen Plan or product state."
+  }
 }

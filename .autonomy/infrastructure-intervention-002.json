@@ -1,0 +1,26 @@
+{
+  "schema": "MY-WEBSITE-INFRASTRUCTURE-INTERVENTION-002",
+  "intervention_id": "HIIC-002",
+  "recorded_at": "2026-09-21T03:56:49+00:00",
+  "classification": "HUMAN_INFRASTRUCTURE_INTERVENTION",
+  "trigger": "Owner-directed safe pause of scheduled autonomous execution for architecture review.",
+  "scope": [
+    "Remove the scheduled trigger from .github/workflows/autonomous-cycle.yml while retaining the prior cron as a reversible comment.",
+    "Verify no autonomous workflow run is active.",
+    "Record a stable stop checkpoint without executing the agent."
+  ],
+  "preserved": {
+    "cycle": 3,
+    "smart_objective_unchanged": true,
+    "frozen_plan_unchanged": true,
+    "frozen_plan_sha256": "163392a11c210240f36013027cf4e7a499febe18cef5e6f35251b656aae4220b",
+    "product_files_changed_by_intervention": false,
+    "development_decision_supplied_by_human": false
+  },
+  "metrics_effect": {
+    "HDIC_increment": 0,
+    "HIIC_increment": 1
+  },
+  "stop_commit": "be6d1ad9eedcdf5616fe9f652152cdcd01da86a3",
+  "status": "STOP_ACTIVE_PENDING_OWNER_ARCHITECTURE_DECISION"
+}
