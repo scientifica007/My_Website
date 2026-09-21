@@ -1,8 +1,10 @@
 name: Autonomous PDSA
 
 on:
-  schedule:
-    - cron: "17 */6 * * *"
+  # AUTONOMY STOP CHECKPOINT (2026-09-21): scheduled wake paused by owner-directed control-plane review.
+  # Reversible prior schedule:
+  # schedule:
+  #   - cron: "17 */6 * * *"
   workflow_dispatch:
     inputs:
       mode:
